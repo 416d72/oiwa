@@ -1,3 +1,4 @@
+import logging
 import re
 from os import environ
 
@@ -14,6 +15,8 @@ from telegram.error import Unauthorized, TelegramError, BadRequest
 
 from dotenv import load_dotenv
 
+from helpers import logger
+
 load_dotenv()  # take environment variables from .env.
 
 DOMAIN = environ.get("DOMAIN")
@@ -23,13 +26,13 @@ try:
     assert DOMAIN != None
     assert BOT_TOKEN != None
 except AssertionError:
-    print("\033[31mPlease set the environment variables\033[0m")
+    logger.critical("Please set the environment variables")
     exit(1)
 
 try:
     bot = Bot(BOT_TOKEN)
 except (TypeError, TelegramError):
-    print("\033[41m⚠️ Invalid bot token\033[0m")
+    logger.critical("⚠️ Invalid bot token")
     exit(1)
 
 app = FastAPI()
@@ -107,7 +110,9 @@ async def update_handler(update: Update):
         else:
             await cmd_help(update=update)
     except (Unauthorized, AttributeError, BadRequest):
-        pass
+        logging.error(
+            f"🔴 Exception! Message: {update.effective_message.text} \n User: {update.effective_user.full_name} ({update.effective_user.username}) \n Chat: {update.effective_chat.id}"
+        )
 
 
 @app.post("/telegram-update-4e1cb6")
